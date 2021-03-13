@@ -4,3 +4,4 @@ pandas
 fastapi
 newsapi-python
 requests
+algoliasearch

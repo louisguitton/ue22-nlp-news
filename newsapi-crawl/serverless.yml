@@ -12,17 +12,21 @@ provider:
   environment:
     # https://www.serverless.com/blog/serverless-secrets-api-keys
     NEWSAPI_KEY: ${param:newsapiKey}
-  iamRoleStatements:
-    - Effect: Allow
-      Action:
-        - s3:*
-      Resource: arn:aws:s3:::articles-louisguitton/*
+  iam:
+    role:
+      statements:
+        - Effect: Allow
+          Action:
+            - s3:*
+          Resource: arn:aws:s3:::articles-louisguitton/*
 
 functions:
   newsapi-run:
     handler: handler.run
     events:
-      - schedule: rate(1 hour)
+      # hourly at 5 past
+      # https://docs.aws.amazon.com/lambda/latest/dg/services-cloudwatchevents-expressions.html
+      - schedule: cron(5 * * * *)
 
 plugins:
   - serverless-python-requirements
