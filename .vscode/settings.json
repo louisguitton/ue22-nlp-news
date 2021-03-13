@@ -1,0 +1,4 @@
+{
+    "python.formatting.provider": "black",
+    "python.pythonPath": "/Users/louis.guitton/workspace/station/venv/bin/python3"
+}

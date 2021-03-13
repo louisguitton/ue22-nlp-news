@@ -1,0 +1,28 @@
+service: newsapi-crawl
+app: newsapi-crawl-app
+org: louisguitton93
+
+frameworkVersion: '2'
+
+provider:
+  name: aws
+  runtime: python3.8
+  lambdaHashingVersion: 20201221
+  region: eu-west-1
+  environment:
+    # https://www.serverless.com/blog/serverless-secrets-api-keys
+    NEWSAPI_KEY: ${param:newsapiKey}
+  iamRoleStatements:
+    - Effect: Allow
+      Action:
+        - s3:*
+      Resource: arn:aws:s3:::articles-louisguitton/*
+
+functions:
+  newsapi-run:
+    handler: handler.run
+    events:
+      - schedule: rate(1 hour)
+
+plugins:
+  - serverless-python-requirements

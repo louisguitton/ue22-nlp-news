@@ -1,0 +1,6 @@
+pydantic[dotenv]
+elasticsearch-dsl
+pandas
+fastapi
+newsapi-python
+requests
