@@ -25,8 +25,8 @@ functions:
     handler: handler.run
     events:
       # hourly at 5 past
-      # https://docs.aws.amazon.com/lambda/latest/dg/services-cloudwatchevents-expressions.html
-      - schedule: cron(5 * * * *)
+      # https://www.serverless.com/framework/docs/providers/aws/events/schedule/
+      - schedule: cron(5 * * * ? *)
 
 plugins:
   - serverless-python-requirements
