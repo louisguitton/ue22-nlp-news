@@ -1,2 +1,3 @@
 newsapi-python
 boto3
+pytz

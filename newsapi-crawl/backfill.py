@@ -1,16 +1,17 @@
-import os
+import logging
 import datetime
 import pandas as pd
 from tqdm import tqdm
-import time
+from handler import main
+
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
 
 backfill_range = pd.date_range(
-    start=datetime.datetime(2021, 3, 11, 9),
-    end=datetime.datetime(2021, 3, 12, 9),
-    freq="H",
+    start=datetime.datetime(2021, 2, 23, 0),
+    end=datetime.datetime(2021, 2, 25, 0),
+    freq="D",
 )
 
 for date in tqdm(backfill_range):
-    cmd = f"sls invoke local --function newsapi-run --stage dev --region eu-west-1 --data \"{{\\\"time\\\": \\\"{date.strftime('%Y-%m-%dT%H:%M:%SZ')}\\\"}}\""
-    os.system(cmd)
-    time.sleep(1)
+    main(date, n_hours_delta=24)
