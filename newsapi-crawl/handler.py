@@ -15,8 +15,11 @@ logger.setLevel(logging.INFO)
 newsapi_key = os.environ["NEWSAPI_KEY"]
 
 
-def get_news_of_hour(
-    newsapi: NewsApiClient, sources: Dict[str, str], execution_date: datetime.datetime
+def get_news(
+    newsapi: NewsApiClient,
+    sources: Dict[str, str],
+    execution_date: datetime.datetime,
+    n_hours_delta: int = 1,
 ) -> List[Dict[str, Any]]:
     """Get NewsAPI news for a given hour."""
     logger.info("Getting articles for " + str(execution_date))
@@ -32,7 +35,10 @@ def get_news_of_hour(
     # initialise the loop
     records: List[Dict[str, Any]] = []
     has_more_articles = True
-    min_published_at: datetime = execution_date + datetime.timedelta(hours=1)
+    min_published_at: datetime = execution_date + datetime.timedelta(
+        hours=n_hours_delta
+    )
+    api_calls: int = 0
 
     def _get_right_bound(min_published_at: datetime) -> str:
         # we have to remove 1 second for the midnight query because newsapi right bound is inclusive
@@ -42,14 +48,18 @@ def get_news_of_hour(
         return right_bound
 
     while has_more_articles:
+        logger.info("Querying for news published until " + str(min_published_at))
         resp: Dict[str, Any] = newsapi.get_everything(
-            from_param=left_bound, to=_get_right_bound(min_published_at), **newsapi_params
+            from_param=left_bound,
+            to=_get_right_bound(min_published_at),
+            **newsapi_params,
         )
+        api_calls += 1
         new_records: List[Dict[str, Any]] = resp["articles"]
         records += new_records
         # NewsAPI free license limits to 100 results per API call
         # If there were more articles during that time, split the API calls to return all articles from that hour
-        has_more_articles = len(records) == 100
+        has_more_articles = len(new_records) == 100
 
         if not len(records):
             raise ValueError(f"No news found for {execution_date}")
@@ -61,15 +71,16 @@ def get_news_of_hour(
     max_published_at: datetime = datetime.datetime.strptime(
         max(r["publishedAt"] for r in records), "%Y-%m-%dT%H:%M:%SZ"
     )
-    if max_published_at - min_published_at > datetime.timedelta(hours=1):
+    if max_published_at - min_published_at > datetime.timedelta(hours=n_hours_delta):
         raise ValueError(
-            "The span of publish dates of the crawled articles is more than 1 hour."
+            f"The span of publish dates of the crawled articles is more than {n_hours_delta} hours."
         )
 
+    logger.info(f"Done. Spent {api_calls} NewsAPI calls")
     return records
 
 
-def main(execution_date: datetime.datetime) -> None:
+def main(execution_date: datetime.datetime, n_hours_delta: int = 1) -> None:
     newsapi = NewsApiClient(api_key=newsapi_key)
 
     # save 1 API call by loading from file
@@ -77,7 +88,9 @@ def main(execution_date: datetime.datetime) -> None:
     with open("./sources.json", "r") as fh:
         french_sources = json.load(fh)
 
-    articles = get_news_of_hour(newsapi, french_sources, execution_date=execution_date)
+    articles = get_news(
+        newsapi, french_sources, execution_date=execution_date, n_hours_delta=n_hours_delta
+    )
 
     if len(articles):
         s3_bucket = "articles-louisguitton"
@@ -105,8 +118,14 @@ def run(event, context) -> None:
     name = context.function_name
     logger.info("Your cron function " + name + " ran at " + str(berlin_datetime))
 
-    # the NewsAPI developer plan has 1 hour delay https://newsapi.org/pricing
-    # given that we get the data from time to time+1h, we would need to remove at least hours=2
-    # so to be sure, in case NewsAPI has more delay, we remove 3 hours
-    execution_date = berlin_datetime - datetime.timedelta(hours=3) - datetime.timedelta(minutes=berlin_datetime.minute)
+
+    execution_date = (
+        berlin_datetime
+        # the NewsAPI developer plan has 1 hour delay https://newsapi.org/pricing
+        # given that we get the data from time to time+1h, we would need to remove at least hours=2
+        # so to be sure, in case NewsAPI has more delay, we remove 3 hours
+        - datetime.timedelta(hours=3)
+        # because the serverless function can be scheduled at any minute within an hour, we remove the minutes
+        - datetime.timedelta(minutes=berlin_datetime.minute)
+    )
     main(execution_date)
