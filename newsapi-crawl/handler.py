@@ -16,9 +16,10 @@ newsapi_key = os.environ["NEWSAPI_KEY"]
 
 
 def get_news_of_hour(
-    newsapi: NewsApiClient, sources: Dict[str, str], date_at: datetime.datetime
+    newsapi: NewsApiClient, sources: Dict[str, str], execution_date: datetime.datetime
 ) -> List[Dict[str, Any]]:
     """Get NewsAPI news for a given hour."""
+    logger.info("Getting articles for " + str(execution_date))
     newsapi_params = dict(
         domains=",".join([domain for name, domain in sources.items()]),
         language="fr",
@@ -26,12 +27,12 @@ def get_news_of_hour(
         page_size=100,
     )
 
-    left_bound: str = date_at.strftime("%Y-%m-%dT%H:%M:%S")
+    left_bound: str = execution_date.strftime("%Y-%m-%dT%H:%M:%S")
 
     # initialise the loop
     records: List[Dict[str, Any]] = []
     has_more_articles = True
-    min_published_at: datetime = date_at + datetime.timedelta(hours=1)
+    min_published_at: datetime = execution_date + datetime.timedelta(hours=1)
 
     def _get_right_bound(min_published_at: datetime) -> str:
         # we have to remove 1 second for the midnight query because newsapi right bound is inclusive
@@ -49,14 +50,14 @@ def get_news_of_hour(
         # NewsAPI free license limits to 100 results per API call
         # If there were more articles during that time, split the API calls to return all articles from that hour
         has_more_articles = len(records) == 100
+
+        if not len(records):
+            raise ValueError(f"No news found for {execution_date}")
         min_published_at: datetime = datetime.datetime.strptime(
-            min(r["publishedAt"] for r in new_records), "%Y-%m-%dT%H:%M:%SZ"
+            min(r["publishedAt"] for r in records), "%Y-%m-%dT%H:%M:%SZ"
         )
 
     # Our assumption is that articles returned are from 1 given hour only, if that is not the case, raise an exception
-    min_published_at: datetime = datetime.datetime.strptime(
-        min(r["publishedAt"] for r in records), "%Y-%m-%dT%H:%M:%SZ"
-    )
     max_published_at: datetime = datetime.datetime.strptime(
         max(r["publishedAt"] for r in records), "%Y-%m-%dT%H:%M:%SZ"
     )
@@ -68,7 +69,7 @@ def get_news_of_hour(
     return records
 
 
-def main(date_at: datetime) -> None:
+def main(execution_date: datetime.datetime) -> None:
     newsapi = NewsApiClient(api_key=newsapi_key)
 
     # save 1 API call by loading from file
@@ -76,11 +77,11 @@ def main(date_at: datetime) -> None:
     with open("./sources.json", "r") as fh:
         french_sources = json.load(fh)
 
-    articles = get_news_of_hour(newsapi, french_sources, date_at=date_at)
+    articles = get_news_of_hour(newsapi, french_sources, execution_date=execution_date)
 
     if len(articles):
         s3_bucket = "articles-louisguitton"
-        s3_key = f"newsapi/{date_at.strftime('%Y-%m-%d/%H')}/articles.json"
+        s3_key = f"newsapi/{execution_date.strftime('%Y-%m-%d/%H')}/articles.json"
         logger.info(f"Writing to s3://{s3_bucket}/{s3_key}")
         s3 = boto3.resource("s3")
         s3object = s3.Object(s3_bucket, s3_key)
@@ -101,8 +102,11 @@ def run(event, context) -> None:
     berlin_datetime = utc_datetime.replace(tzinfo=pytz.utc).astimezone(
         pytz.timezone("Europe/Berlin")
     )
-    time = berlin_datetime - datetime.timedelta(hours=1)
     name = context.function_name
-    logger.info("Your cron function " + name + " ran at " + str(time))
+    logger.info("Your cron function " + name + " ran at " + str(berlin_datetime))
 
-    main(time)
+    # the NewsAPI developer plan has 1 hour delay https://newsapi.org/pricing
+    # given that we get the data from time to time+1h, we would need to remove at least hours=2
+    # so to be sure, in case NewsAPI has more delay, we remove 3 hours
+    execution_date = berlin_datetime - datetime.timedelta(hours=3) - datetime.timedelta(minutes=berlin_datetime.minute)
+    main(execution_date)
