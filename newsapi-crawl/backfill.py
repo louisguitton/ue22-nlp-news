@@ -4,12 +4,12 @@ import pandas as pd
 from tqdm import tqdm
 from handler import main
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger('handler')
 logger.setLevel(logging.INFO)
 
 backfill_range = pd.date_range(
-    start=datetime.datetime(2021, 2, 23, 0),
-    end=datetime.datetime(2021, 2, 25, 0),
+    start=datetime.datetime(2021, 3, 2, 0),
+    end=datetime.datetime(2021, 3, 5, 0),
     freq="D",
 )
 
