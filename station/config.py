@@ -16,6 +16,10 @@ class Settings(BaseSettings):
     newsapi_key: str
     mediastack_key: str
 
+    algolia_application_id: str
+    algolia_search_api_key: str
+    algolia_admin_api_key: str
+
     class Config:
         """Read settings from dotenv file."""
 

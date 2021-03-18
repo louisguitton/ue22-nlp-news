@@ -1,7 +1,12 @@
 pydantic[dotenv]
 elasticsearch-dsl
 pandas
+s3fs
 fastapi
 newsapi-python
 requests
 algoliasearch
+dask[dataframe]
+jupyterlab
+altair
+matplotlib
