@@ -16,6 +16,13 @@ logger.setLevel(logging.INFO)
 newsapi_key = os.environ["NEWSAPI_KEY"]
 
 
+def _extract_sources(articles: List[Dict]) -> Dict[str, str]:
+    return {
+        a["source"]["name"]: urllib.parse.urlparse(a["url"]).netloc.lstrip("www.")
+        for a in articles
+    }
+
+
 def get_domains(
     newsapi: NewsApiClient, filepath: str = "./sources.json", **newsapi_params
 ) -> Dict[str, str]:
@@ -55,14 +62,7 @@ def get_domains(
         "technology",
     ]:
         top_headlines = newsapi.get_top_headlines(category=category, **newsapi_params)
-        sources.update(
-            {
-                a["source"]["name"]: urllib.parse.urlparse(a["url"]).netloc.lstrip(
-                    "www."
-                )
-                for a in top_headlines["articles"]
-            }
-        )
+        sources.update(_extract_sources(top_headlines["articles"]))
 
     # TODO: do not overwrite, simply update
     with open(filepath, "w") as fh:
@@ -145,6 +145,9 @@ def get_news(
             min(r["publishedAt"] for r in records), "%Y-%m-%dT%H:%M:%SZ"
         )
 
+    print(api_calls)
+    logger.info(f"Done. Spent {api_calls} NewsAPI calls")
+
     # Our assumption is that articles returned are from 1 given hour only, if that is not the case, raise an exception
     max_published_at: datetime = datetime.datetime.strptime(
         max(r["publishedAt"] for r in records), "%Y-%m-%dT%H:%M:%SZ"
@@ -154,7 +157,6 @@ def get_news(
             f"The span of publish dates of the crawled articles is more than {n_hours_delta} hours."
         )
 
-    logger.info(f"Done. Spent {api_calls} NewsAPI calls")
     return records
 
 
