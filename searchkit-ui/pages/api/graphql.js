@@ -14,15 +14,15 @@ const searchkitConfig = {
     index: 'articles',
     hits: {
         fields: [
-            'id', 
-            'title', 
-            'description', 
-            'content', 
-            'source_name', 
-            'author', 
-            'url', 
+            'id',
+            'title',
+            'description',
+            'content',
+            'source_name',
+            'author',
+            'url',
             'published_at',
-            'urlToImage'
+            'url_to_image'
         ]
     },
     // boost importance of title by 4
@@ -76,7 +76,7 @@ const server = new ApolloServer({
         author: String
         url: String
         published_at: Date
-        urlToImage: String
+        url_to_image: String
     }
 
     type ResultHit implements SKHit {

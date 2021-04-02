@@ -1,13 +1,13 @@
-import { useSearchkitQuery } from '@searchkit/client'
-import { gql } from '@apollo/client'
+import { useSearchkitQuery } from "@searchkit/client";
+import { gql } from "@apollo/client";
 
 import {
     FacetsList,
     SearchBar,
     Pagination,
     ResetSearchButton,
-    SelectedFilters
-} from '@searchkit/elastic-ui'
+    SelectedFilters,
+} from "@searchkit/elastic-ui";
 
 import {
     EuiPage,
@@ -23,13 +23,19 @@ import {
     EuiHorizontalRule,
     EuiBadge,
     EuiFlexGroup,
+    EuiFlexGrid,
     EuiFlexItem,
     EuiCard,
-    EuiText
-} from '@elastic/eui'
+    EuiText,
+} from "@elastic/eui";
 
 const query = gql`
-query resultSet($query: String, $filters: [SKFiltersSet], $page: SKPageInput, $sortBy: String) {
+  query resultSet(
+    $query: String
+    $filters: [SKFiltersSet]
+    $page: SKPageInput
+    $sortBy: String
+  ) {
     results(query: $query, filters: $filters) {
       summary {
         total
@@ -71,14 +77,14 @@ query resultSet($query: String, $filters: [SKFiltersSet], $page: SKPageInput, $s
           ... on ResultHit {
             id
             fields {
-                title
-                description
-                content
-                source_name
-                author
-                url
-                published_at
-                urlToImage
+              title
+              description
+              content
+              source_name
+              author
+              url
+              published_at
+              url_to_image
             }
           }
         }
@@ -96,40 +102,44 @@ query resultSet($query: String, $filters: [SKFiltersSet], $page: SKPageInput, $s
       }
     }
   }
-`
+`;
 
 export const HitsList = ({ data }) => (
     <>
-        {data?.results.hits.items.map((hit) => (
-            <EuiFlexGroup gutterSize="xl" key={hit.id}>
+        <EuiFlexGrid columns={2} gutterSize="m">
+            {data?.results.hits.items.map((hit) => (
                 <EuiFlexItem>
-                    <EuiFlexGroup>
-                        <EuiFlexItem grow={4}>
-                            <EuiCard
-                                grow={false}
-                                textAlign="left"
-                                title={hit.fields.title}
-                                description={hit.fields.description}
-                                image={<img src={hit.fields.urlToImage} style={{ maxWidth: 200 }} alt="Article Image" />}
-                                onClick={() => { window.open(hit.fields.url, '_blank'); }}
-                            >
-                                <EuiText size="s">
-                                    <EuiBadge color="primary">{hit.fields.source_name}</EuiBadge>
-                                    <EuiBadge color="secondary">{hit.fields.published_at}</EuiBadge>
-                                </EuiText>
-                            </EuiCard>
-                        </EuiFlexItem>
-                    </EuiFlexGroup>
+                    <EuiCard
+                        grow={false}
+                        textAlign="left"
+                        title={hit.fields.title}
+                        description={hit.fields.description}
+                        image={
+                            <img
+                                src={hit.fields.url_to_image}
+                                style={{ maxWidth: 200 }}
+                                alt="Article Image"
+                            />
+                        }
+                        onClick={() => {
+                            window.open(hit.fields.url, "_blank");
+                        }}>
+                        <EuiText size="s">
+                            <EuiBadge color="primary">{hit.fields.source_name}</EuiBadge>
+                            <EuiBadge color="secondary">
+                                {hit.fields.published_at}
+                            </EuiBadge>
+                        </EuiText>
+                    </EuiCard>
                 </EuiFlexItem>
-            </EuiFlexGroup>
-        ))}
+            ))}
+        </EuiFlexGrid>
     </>
-)
+);
 
 export default () => {
-
-    const { data, loading } = useSearchkitQuery(query)
-    const Facets = FacetsList([])
+    const { data, loading } = useSearchkitQuery(query);
+    const Facets = FacetsList([]);
     return (
         <EuiPage>
             <EuiPageSideBar>
@@ -165,5 +175,5 @@ export default () => {
                 </EuiPageContent>
             </EuiPageBody>
         </EuiPage>
-    )
-}
+    );
+};
