@@ -26,7 +26,7 @@ functions:
     events:
       # hourly at 5 past
       # https://www.serverless.com/framework/docs/providers/aws/events/schedule/
-      - schedule: cron(5 * * * ? *)
+      - schedule: cron(5 0 * * ? *)
 
 plugins:
   - serverless-python-requirements

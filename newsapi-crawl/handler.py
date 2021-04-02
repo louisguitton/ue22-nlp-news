@@ -166,6 +166,10 @@ def main(
     refresh_sources: bool = False,
 ) -> None:
     """Get all french articles for a given timeframe and store them to S3."""
+    # before using any API credits, check S3 credentials
+    sts = boto3.client("sts")
+    sts.get_caller_identity()
+
     newsapi = NewsApiClient(api_key=newsapi_key)
 
     # using the `sources` param of /v2/everything endpoint is useful only if the sources are officially supported by NewsAPI.
@@ -228,4 +232,4 @@ def run(event, context) -> None:
         # because the serverless function can be scheduled at any minute within an hour, we remove the minutes
         - datetime.timedelta(minutes=berlin_datetime.minute)
     )
-    main(execution_date)
+    main(execution_date, n_hours_delta=24)
