@@ -10,3 +10,4 @@ dask[dataframe]
 jupyterlab
 altair
 matplotlib
+typer[all]
