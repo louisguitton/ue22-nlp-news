@@ -1,5 +1,14 @@
-from elasticsearch_dsl import Document, Date, Integer, Keyword, Text
-from elasticsearch_dsl import FacetedSearch, TermsFacet, DateHistogramFacet
+from elasticsearch_dsl import (
+    connections,
+    Document,
+    Date,
+    Integer,
+    Keyword,
+    Text,
+    FacetedSearch,
+    TermsFacet,
+    DateHistogramFacet,
+)
 
 
 class Article(Document):
@@ -10,6 +19,8 @@ class Article(Document):
     author = Keyword()
     published_at = Date()
     url = Keyword()
+    url_to_image = Keyword()
+    all_text = Text()
 
     class Index:
         name = "articles"
@@ -37,6 +48,7 @@ class ArticleSearch(FacetedSearch):
 
 
 if __name__ == "__main__":
+    connection = connections.create_connection(hosts=["localhost:9200"])
 
     s = ArticleSearch()
     response = s.execute()

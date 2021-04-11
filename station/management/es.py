@@ -27,9 +27,12 @@ def _document_generator():
     return records
 
 
-def main():
+def main(force: bool = False):
     """Updates the ElasticSearch index."""
     connection = connections.create_connection(hosts=["localhost:9200"])
+
+    if force:
+        connection.indices.delete(index=ES_INDEX, ignore=[400, 404])
 
     typer.echo(f'Checking if index "{ES_INDEX}" exists...')
     if connection.indices.exists(index=ES_INDEX):
