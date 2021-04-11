@@ -145,7 +145,6 @@ def get_news(
             min(r["publishedAt"] for r in records), "%Y-%m-%dT%H:%M:%SZ"
         )
 
-    print(api_calls)
     logger.info(f"Done. Spent {api_calls} NewsAPI calls")
 
     # Our assumption is that articles returned are from 1 given hour only, if that is not the case, raise an exception
@@ -212,6 +211,8 @@ def main(
 def run(event, context) -> None:
     """Lambda function handler that will run on schedule.
 
+    Event is UTC.
+
     Ref:
         - https://docs.aws.amazon.com/lambda/latest/dg/services-cloudwatchevents.html
     """
@@ -223,13 +224,15 @@ def run(event, context) -> None:
     name = context.function_name
     logger.info("Your cron function " + name + " ran at " + str(berlin_datetime))
 
+    hours_delta = 24
     execution_date = (
         berlin_datetime
         # the NewsAPI developer plan has 1 hour delay https://newsapi.org/pricing
-        # given that we get the data from time to time+1h, we would need to remove at least hours=2
-        # so to be sure, in case NewsAPI has more delay, we remove 3 hours
-        - datetime.timedelta(hours=3)
+        # this line is here just to be consistent in case we want to use an hourly lambda function
+        # - datetime.timedelta(hours=1)
         # because the serverless function can be scheduled at any minute within an hour, we remove the minutes
-        - datetime.timedelta(minutes=berlin_datetime.minute)
+        - datetime.timedelta(minutes=berlin_datetime.minute, hours=berlin_datetime.hour)
+        # given that we get the data from time to time+hours_delta, we need to remove that
+        - datetime.timedelta(hours=hours_delta)
     )
-    main(execution_date, n_hours_delta=24)
+    main(execution_date, n_hours_delta=hours_delta)

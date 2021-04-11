@@ -12,6 +12,7 @@ provider:
   environment:
     # https://www.serverless.com/blog/serverless-secrets-api-keys
     NEWSAPI_KEY: ${param:newsapiKey}
+  timeout: 90  # 90 seconds timeout
   iam:
     role:
       statements:
