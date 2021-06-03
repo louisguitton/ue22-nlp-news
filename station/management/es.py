@@ -27,6 +27,9 @@ def _document_generator():
     return records
 
 
+# TODO: add analyser_settings and mappings_settings as parameters
+# TODO: call it reindex
+# TODO: add type of documents index <> database doc_type <> table
 def main(force: bool = False):
     """Updates the ElasticSearch index."""
     connection = connections.create_connection(hosts=["localhost:9200"])
@@ -49,6 +52,10 @@ def main(force: bool = False):
                 "settings": {
                     "number_of_shards": 1,
                     "number_of_replicas": 0,
+                    # TODO:
+                    # "index": {
+                    #     "analysis": analysis_settings
+                    # }
                 },
                 "mappings": ES_MAPPING,
             },

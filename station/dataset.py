@@ -36,6 +36,7 @@ class Dataset(DatasetBase):
         date_field: str = None,
         stored_fields: str = None,
     ):
+        # multi_match is ElasticSearch's Swiss Army knife for constructing queries across multiple fields.
         query = Q("multi_match", query=query, fields=match_fields)
         super().__init__(
             query=query, date_field=date_field, stored_fields=stored_fields
