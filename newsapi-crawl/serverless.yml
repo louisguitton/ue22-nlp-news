@@ -24,6 +24,7 @@ provider:
 functions:
   newsapi-run:
     handler: handler.run
+    maximumRetryAttempts: 1
     events:
       # hourly at 5 past
       # https://www.serverless.com/framework/docs/providers/aws/events/schedule/

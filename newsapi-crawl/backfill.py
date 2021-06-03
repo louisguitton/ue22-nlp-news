@@ -8,8 +8,8 @@ logger = logging.getLogger('handler')
 logger.setLevel(logging.INFO)
 
 backfill_range = pd.date_range(
-    start=datetime.datetime(2021, 4, 9, 0),
-    end=datetime.datetime(2021, 4, 10, 0),
+    start=datetime.datetime(2021, 4, 11, 0),
+    end=datetime.datetime(2021, 4, 11, 0),
     freq="D",
 )
 

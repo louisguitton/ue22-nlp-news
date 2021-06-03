@@ -14,6 +14,7 @@ logger.setLevel(logging.INFO)
 
 
 newsapi_key = os.environ["NEWSAPI_KEY"]
+MAX_API_CALLS = 40
 
 
 def _extract_sources(articles: List[Dict]) -> Dict[str, str]:
@@ -126,6 +127,9 @@ def get_news(
         return right_bound
 
     while has_more_articles:
+        if api_calls >= MAX_API_CALLS:
+            logger.info("Stopping because of too many API calls")
+            break
         logger.info("Querying for news published until " + str(min_published_at))
         resp: Dict[str, Any] = newsapi.get_everything(
             from_param=left_bound,
@@ -231,7 +235,11 @@ def run(event, context) -> None:
         # this line is here just to be consistent in case we want to use an hourly lambda function
         # - datetime.timedelta(hours=1)
         # because the serverless function can be scheduled at any minute within an hour, we remove the minutes
-        - datetime.timedelta(minutes=berlin_datetime.minute, hours=berlin_datetime.hour)
+        - datetime.timedelta(
+            seconds=berlin_datetime.second,
+            minutes=berlin_datetime.minute,
+            hours=berlin_datetime.hour,
+        )
         # given that we get the data from time to time+hours_delta, we need to remove that
         - datetime.timedelta(hours=hours_delta)
     )
