@@ -22,5 +22,5 @@
 
 ## News Dataset
 
-https://commoncrawl.org/2016/10/news-dataset-available/
-https://github.com/commoncrawl/news-crawl/
+- https://commoncrawl.org/2016/10/news-dataset-available/
+- https://github.com/commoncrawl/news-crawl/

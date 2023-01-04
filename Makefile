@@ -12,3 +12,6 @@ kibana:
 
 front:
 	cd searchkit-ui && yarn start
+
+download-data:
+	aws s3 sync s3://articles-louisguitton/newsapi data/newsapi
